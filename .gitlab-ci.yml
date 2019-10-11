@@ -22,7 +22,7 @@ stages:
   - "Code Quality"
   - "Prepare"
   - "Registration"
-  - "Create secret dev"
+  - "Create secret & quotas dev"
   - "Deploy dev"
   - "Deploy prod"
   - "Send Url to GitHub"
@@ -149,7 +149,7 @@ Register init kinto image:
 
 
 ###########################################
-###          CREATE SECRET DEV          ###
+###      CREATE SECRET DEV & QUOTAS     ###
 ###########################################
 
 #
@@ -160,9 +160,29 @@ Register init kinto image:
     IMAGE_TAG: $CI_COMMIT_SHA
 #
 
+Deploy quotas (dev):
+  stage: "Create secret & quotas dev"
+  image: $CI_REGISTRY/socialgouv/docker/kubectl:0.7.1
+  script:
+  - HASH_BRANCH_NAME=$(printf "$CI_COMMIT_REF_NAME" | sha1sum | cut -c1-5)
+  - export HASH_BRANCH_NAME=-$HASH_BRANCH_NAME
+  - export K8S_NAMESPACE=egapro${HASH_BRANCH_NAME}
+  # Quotas
+  - envsubst < ./k8s/quota.yml > ./quota.yml
+  - kubectl apply -f ./quota.yml -n ${K8S_NAMESPACE}
+  # Remove the default- quota
+  - kubectl get resourcequota -n ${K8S_NAMESPACE}
+  - kubectl delete $(kubectl get -n ${K8S_NAMESPACE} resourcequota --output=name | grep default-) -n ${K8S_NAMESPACE}
+  environment:
+    name: $DEV_ENVIRONMENT_NAME
+  only:
+  - branches
+  except:
+  - master
+
 Deploy @secret (dev):
   <<: *deploy_stage
-  stage: "Create secret dev"
+  stage: "Create secret & quotas dev"
   image:
     name: $CI_REGISTRY/socialgouv/docker/kubectl:0.7.1
   variables:

@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: ${K8S_NAMESPACE}-quota
+  namespace: ${K8S_NAMESPACE}
+  labels:
+    cattle.io/creator: norman
+    resourcequota.management.cattle.io/default-resource-quota: "true"
+spec:
+  hard:
+    #   100m // api
+    # + 100m // app
+    # + 250m // memcached x3
+    # + 20m // init kinto
+    # + 20m // kinto
+    # + 500m // postgres
+    # ======
+    #  1490m    ~1.5 CPU x2
+    limits.cpu: 2350m
+
+    #   64Mi // api
+    # + 64Mi // app
+    # + 128Mi // memcached x3
+    # + 64Mi // init kinto
+    # + 128Mi // kinto
+    # + 256Mi // postgres
+    # =======
+    #  960Mi      ~1 Gi x2
+    limits.memory: 2Gi
