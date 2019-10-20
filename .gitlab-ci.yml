@@ -160,25 +160,25 @@ Register init kinto image:
     IMAGE_TAG: $CI_COMMIT_SHA
 #
 
-Deploy quotas (dev):
-  stage: "Create secret & quotas dev"
-  image: $CI_REGISTRY/socialgouv/docker/kubectl:0.7.1
-  script:
-  - HASH_BRANCH_NAME=$(printf "$CI_COMMIT_REF_NAME" | sha1sum | cut -c1-5)
-  - export HASH_BRANCH_NAME=-$HASH_BRANCH_NAME
-  - export K8S_NAMESPACE=egapro${HASH_BRANCH_NAME}
-  # Quotas
-  - envsubst < ./k8s/quota.yml > ./quota.yml
-  - kubectl apply -f ./quota.yml -n ${K8S_NAMESPACE}
-  # Remove the default- quota
-  - kubectl get resourcequota -n ${K8S_NAMESPACE}
-  - kubectl delete $(kubectl get -n ${K8S_NAMESPACE} resourcequota --output=name | grep default-) -n ${K8S_NAMESPACE}
-  environment:
-    name: $DEV_ENVIRONMENT_NAME
-  only:
-  - branches
-  except:
-  - master
+#Deploy quotas (dev):
+#  stage: "Create secret & quotas dev"
+#  image: $CI_REGISTRY/socialgouv/docker/kubectl:0.7.1
+#  script:
+#  - HASH_BRANCH_NAME=$(printf "$CI_COMMIT_REF_NAME" | sha1sum | cut -c1-5)
+#  - export HASH_BRANCH_NAME=-$HASH_BRANCH_NAME
+#  - export K8S_NAMESPACE=egapro${HASH_BRANCH_NAME}
+#  # Quotas
+#  - envsubst < ./k8s/quota.yml > ./quota.yml
+#  - kubectl apply -f ./quota.yml -n ${K8S_NAMESPACE}
+#  # Remove the default- quota
+#  - kubectl get resourcequota -n ${K8S_NAMESPACE}
+#  - kubectl delete $(kubectl get -n ${K8S_NAMESPACE} resourcequota --output=name | grep default-) -n ${K8S_NAMESPACE}
+#  environment:
+#    name: $DEV_ENVIRONMENT_NAME
+#  only:
+#  - branches
+#  except:
+#  - master
 
 Deploy @secret (dev):
   <<: *deploy_stage
@@ -194,7 +194,7 @@ Deploy @secret (dev):
   - export HASH_BRANCH_NAME=-$HASH_BRANCH_NAME
   - export K8S_NAMESPACE=egapro${HASH_BRANCH_NAME}
   - envsubst < ./k8s/secret-dev.yml > ./secret-dev.yml
-  - kubectl apply -f ./secret-dev.yml -n ${K8S_NAMESPACE}
+  - kubectl create secret generic egapro-secret  --from-literal=POSTGRES_EGAPRO_PASSWORD=postgres --from-literal=KINTO_ADMIN_LOGIN=admin --from-literal=KINTO_ADMIN_PASSWORD=admin --from-literal=MAIL_HOST=smtp.mailtrap.io --from-literal=MAIL_USERNAME=3c85a6267cf41e --from-literal=MAIL_PASSWORD=f5b1399d61110d --from-literal=API_SENTRY_DSN=https://084bf19c0e1141ddadbc1f7b86d2eb57@sentry.tools.factory.social.gouv.fr/22 -n ${K8S_NAMESPACE}
   only:
   - branches
   except:
